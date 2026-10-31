@@ -1,58 +1,135 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Taller Consumo de APIs - CloudSpace Solutions
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplicacion web desarrollada con Laravel para CloudSpace Solutions. Permite realizar pagos mediante Stripe y enviar confirmaciones transaccionales con SendGrid.
 
-## About Laravel
+## Funcionalidades
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Checkout web para ingresar correo, monto y moneda.
+- Creacion de Stripe PaymentIntents mediante una clase de servicio.
+- Formulario seguro con Stripe Elements.
+- Recepcion y validacion de webhooks de Stripe.
+- Registro de pagos exitosos en MySQL.
+- Envio de correos transaccionales mediante la API REST de SendGrid.
+- Separacion de integraciones externas en clases de servicio.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tecnologias
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.5
+- Laravel 13
+- Stripe PHP SDK
+- SendGrid API REST
+- MySQL 8.4
+- Laravel Sail
+- Docker
+- Blade y Tailwind CSS
 
-## Learning Laravel
+## Requisitos
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Docker
+- Docker Compose
+- Git
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Instalacion
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+1. Clonar el repositorio:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/ANNNAAAAAA12/API_taller_backend.git
+cd API_taller_backend
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+2. Crear el archivo de entorno:
 
-## Contributing
+```bash
+cp .env.example .env
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+3. Configurar las variables necesarias:
 
-## Code of Conduct
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=sail
+DB_PASSWORD=password
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+STRIPE_KEY=pk_test_...
+STRIPE_SECRET=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 
-## Security Vulnerabilities
+SENDGRID_API_KEY=...
+MAIL_FROM_ADDRESS="correo-verificado@ejemplo.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Las credenciales reales deben permanecer en `.env`. Este archivo esta excluido de Git mediante `.gitignore`.
 
-## License
+4. Iniciar los contenedores:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+docker compose up -d
+```
+
+5. Instalar dependencias y preparar la aplicacion:
+
+```bash
+docker compose exec laravel.test composer install
+docker compose exec laravel.test php artisan key:generate
+docker compose exec laravel.test php artisan migrate
+```
+
+La aplicacion quedara disponible en:
+
+- Checkout: http://localhost/checkout
+- Envio de correo: http://localhost/email
+
+## Configuracion de Stripe Webhook
+
+Para desarrollo local se puede usar Stripe CLI:
+
+```bash
+stripe listen --forward-to localhost/stripe/webhook
+```
+
+Copiar el `whsec_...` mostrado por Stripe CLI en `STRIPE_WEBHOOK_SECRET`.
+
+Importante: usar tarjetas de prueba de Stripe y no credenciales reales durante las pruebas.
+
+## Rutas principales
+
+| Metodo | Ruta | Funcion |
+| --- | --- | --- |
+| GET | `/checkout` | Muestra el formulario de pago |
+| POST | `/create-payment-intent` | Crea el PaymentIntent y retorna `clientSecret` |
+| POST | `/stripe/webhook` | Recibe eventos de Stripe y registra pagos exitosos |
+| GET | `/email` | Muestra el formulario de correo |
+| POST | `/email` | Envia un correo mediante SendGrid |
+
+## Base de datos
+
+Los pagos confirmados se almacenan en la tabla `payments` con:
+
+- `stripe_payment_intent_id`
+- `stripe_event_id`
+- `customer_email`
+- `amount`
+- `currency`
+- `status`
+- `description`
+
+## Pruebas
+
+Ejecutar las pruebas desde Laravel Sail:
+
+```bash
+./vendor/bin/sail artisan test
+```
+
+## Seguridad
+
+- Nunca publicar las claves reales en GitHub.
+- Rotar cualquier clave que haya sido compartida o expuesta.
+- Validar la firma de los webhooks antes de procesarlos.
+- Mantener las claves privadas exclusivamente en `.env`.
+- La ruta `/stripe/webhook` esta excluida de la validacion CSRF.

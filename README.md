@@ -1,3 +1,5 @@
+
+<img width="1852" height="950" alt="image" src="https://github.com/user-attachments/assets/b30a5c30-5a0e-4ea4-b55b-dad9e86072ac" />
 # Taller Consumo de APIs - CloudSpace Solutions
 
 Aplicacion web desarrollada con Laravel para CloudSpace Solutions. Permite realizar pagos mediante Stripe y enviar confirmaciones transaccionales con SendGrid.
